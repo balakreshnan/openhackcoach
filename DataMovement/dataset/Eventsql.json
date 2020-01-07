@@ -1,0 +1,58 @@
+{
+	"name": "Eventsql",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "AzureSqlDatabase1",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [
+			{
+				"name": "id",
+				"type": "varchar"
+			},
+			{
+				"name": "event",
+				"type": "varchar"
+			},
+			{
+				"name": "userId",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "itemId",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "orderId",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "contentId",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "sessionId",
+				"type": "varchar"
+			},
+			{
+				"name": "created",
+				"type": "datetime2",
+				"scale": 7
+			},
+			{
+				"name": "region",
+				"type": "varchar"
+			}
+		],
+		"typeProperties": {
+			"schema": "dbo",
+			"table": "Event"
+		}
+	}
+}

@@ -1,0 +1,39 @@
+{
+	"name": "Usersql",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "AzureSqlDatabase1",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [
+			{
+				"name": "UserId",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "Name",
+				"type": "varchar"
+			},
+			{
+				"name": "Email",
+				"type": "varchar"
+			},
+			{
+				"name": "CategoryId",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "Personality",
+				"type": "varchar"
+			}
+		],
+		"typeProperties": {
+			"schema": "dbo",
+			"table": "User"
+		}
+	}
+}

@@ -1,0 +1,14 @@
+{
+	"name": "ItemAggregate",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "CosmosDb1",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "CosmosDbSqlApiCollection",
+		"typeProperties": {
+			"collectionName": "ItemAggregate"
+		}
+	}
+}

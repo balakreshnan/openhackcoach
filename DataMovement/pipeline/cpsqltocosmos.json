@@ -3,7 +3,7 @@
 	"properties": {
 		"activities": [
 			{
-				"name": "MoveSqlToCosmos-Orders",
+				"name": "Orders",
 				"type": "Copy",
 				"dependsOn": [],
 				"policy": {
@@ -39,7 +39,7 @@
 				]
 			},
 			{
-				"name": "SQlToCosmosOrderDetails",
+				"name": "OrderDetails",
 				"type": "Copy",
 				"dependsOn": [],
 				"policy": {
@@ -70,6 +70,176 @@
 				"outputs": [
 					{
 						"referenceName": "Orderdetails",
+						"type": "DatasetReference"
+					}
+				]
+			},
+			{
+				"name": "User",
+				"type": "Copy",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "AzureSqlSource",
+						"queryTimeout": "02:00:00"
+					},
+					"sink": {
+						"type": "CosmosDbSqlApiSink",
+						"writeBehavior": "insert"
+					},
+					"enableStaging": false
+				},
+				"inputs": [
+					{
+						"referenceName": "Usersql",
+						"type": "DatasetReference"
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "User",
+						"type": "DatasetReference"
+					}
+				]
+			},
+			{
+				"name": "Item",
+				"type": "Copy",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "AzureSqlSource",
+						"queryTimeout": "02:00:00"
+					},
+					"sink": {
+						"type": "CosmosDbSqlApiSink",
+						"writeBehavior": "insert"
+					},
+					"enableStaging": false
+				},
+				"inputs": [
+					{
+						"referenceName": "Itemsql",
+						"type": "DatasetReference"
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "Item",
+						"type": "DatasetReference"
+					}
+				]
+			},
+			{
+				"name": "ItemAggregate",
+				"type": "Copy",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "AzureSqlSource",
+						"queryTimeout": "02:00:00"
+					},
+					"sink": {
+						"type": "CosmosDbSqlApiSink",
+						"writeBehavior": "insert"
+					},
+					"enableStaging": false
+				},
+				"inputs": [
+					{
+						"referenceName": "ItemAggregatesql",
+						"type": "DatasetReference"
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "ItemAggregate",
+						"type": "DatasetReference"
+					}
+				]
+			},
+			{
+				"name": "Event",
+				"type": "Copy",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "AzureSqlSource",
+						"queryTimeout": "02:00:00"
+					},
+					"sink": {
+						"type": "CosmosDbSqlApiSink",
+						"writeBehavior": "insert"
+					},
+					"enableStaging": false
+				},
+				"inputs": [
+					{
+						"referenceName": "Eventsql",
+						"type": "DatasetReference"
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "Event",
+						"type": "DatasetReference"
+					}
+				]
+			},
+			{
+				"name": "Category",
+				"type": "Copy",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "AzureSqlSource",
+						"queryTimeout": "02:00:00"
+					},
+					"enableStaging": false
+				},
+				"inputs": [
+					{
+						"referenceName": "Categorysql",
 						"type": "DatasetReference"
 					}
 				]

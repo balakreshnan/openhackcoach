@@ -1,0 +1,83 @@
+{
+	"name": "Itemsql",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "AzureSqlDatabase1",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [
+			{
+				"name": "ItemId",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "VoteCount",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "ProductName",
+				"type": "varchar"
+			},
+			{
+				"name": "ImdbId",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "Description",
+				"type": "varchar"
+			},
+			{
+				"name": "ImagePath",
+				"type": "varchar"
+			},
+			{
+				"name": "ThumbnailPath",
+				"type": "varchar"
+			},
+			{
+				"name": "UnitPrice",
+				"type": "decimal",
+				"precision": 18,
+				"scale": 2
+			},
+			{
+				"name": "CategoryId",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "Category",
+				"type": "varchar"
+			},
+			{
+				"name": "Popularity",
+				"type": "decimal",
+				"precision": 18,
+				"scale": 2
+			},
+			{
+				"name": "OriginalLanguage",
+				"type": "varchar"
+			},
+			{
+				"name": "ReleaseDate",
+				"type": "date"
+			},
+			{
+				"name": "VoteAverage",
+				"type": "decimal",
+				"precision": 18,
+				"scale": 2
+			}
+		],
+		"typeProperties": {
+			"schema": "dbo",
+			"table": "Item"
+		}
+	}
+}

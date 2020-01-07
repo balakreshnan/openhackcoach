@@ -1,0 +1,46 @@
+{
+	"name": "ItemAggregatesql",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "AzureSqlDatabase1",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [
+			{
+				"name": "id",
+				"type": "varchar"
+			},
+			{
+				"name": "ItemId",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "BuyCount",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "ViewDetailsCount",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "AddToCartCount",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "VoteCount",
+				"type": "int",
+				"precision": 10
+			}
+		],
+		"typeProperties": {
+			"schema": "dbo",
+			"table": "ItemAggregate"
+		}
+	}
+}
