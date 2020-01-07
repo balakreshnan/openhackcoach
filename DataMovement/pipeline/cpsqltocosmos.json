@@ -3,7 +3,7 @@
 	"properties": {
 		"activities": [
 			{
-				"name": "MoveSqlToCosmos",
+				"name": "MoveSqlToCosmos-Orders",
 				"type": "Copy",
 				"dependsOn": [],
 				"policy": {
