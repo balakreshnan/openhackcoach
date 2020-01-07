@@ -235,11 +235,21 @@
 						"type": "AzureSqlSource",
 						"queryTimeout": "02:00:00"
 					},
+					"sink": {
+						"type": "CosmosDbSqlApiSink",
+						"writeBehavior": "insert"
+					},
 					"enableStaging": false
 				},
 				"inputs": [
 					{
 						"referenceName": "Categorysql",
+						"type": "DatasetReference"
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "Category",
 						"type": "DatasetReference"
 					}
 				]
