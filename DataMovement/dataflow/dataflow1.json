@@ -1,0 +1,49 @@
+{
+	"name": "dataflow1",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "orderdata",
+						"type": "DatasetReference"
+					},
+					"name": "orderdata"
+				},
+				{
+					"dataset": {
+						"referenceName": "Item",
+						"type": "DatasetReference"
+					},
+					"name": "Item"
+				},
+				{
+					"dataset": {
+						"referenceName": "Category",
+						"type": "DatasetReference"
+					},
+					"name": "Category"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "ordercomplete",
+						"type": "DatasetReference"
+					},
+					"name": "ordercomplete"
+				}
+			],
+			"transformations": [
+				{
+					"name": "Join1"
+				},
+				{
+					"name": "Join2"
+				}
+			],
+			"script": "\n\nsource(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tquery: 'SELECT a.OrderDate, c.ProductId, c.Quantity, c.UnitPrice, a.Total FROM orderdata a JOIN c IN a.Details A',\n\tformat: 'documentQuery',\n\tsystemColumns: false) ~> orderdata\nsource(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tformat: 'document') ~> Item\nsource(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tformat: 'document') ~> Category\norderdata, Item join(ProductId == ItemId,\n\tjoinType:'inner',\n\tbroadcast: 'none')~> Join1\nItem, Category join(CategoryId == CategoryId,\n\tjoinType:'inner',\n\tbroadcast: 'none')~> Join2\nJoin1 sink(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tdeletable:false,\n\tinsertable:true,\n\tupdateable:false,\n\tupsertable:false,\n\tformat: 'document') ~> ordercomplete"
+		}
+	}
+}

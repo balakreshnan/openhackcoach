@@ -1,0 +1,99 @@
+{
+	"name": "orderdata",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "CosmosDb1",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "CosmosDbSqlApiCollection",
+		"schema": {
+			"type": "object",
+			"properties": {
+				"Region": {
+					"type": "string"
+				},
+				"OrderDate": {
+					"type": "string"
+				},
+				"FirstName": {
+					"type": "string"
+				},
+				"LastName": {
+					"type": "string"
+				},
+				"Address": {
+					"type": "string"
+				},
+				"City": {
+					"type": "string"
+				},
+				"State": {
+					"type": "string"
+				},
+				"PostalCode": {
+					"type": "string"
+				},
+				"Country": {
+					"type": "string"
+				},
+				"Phone": {
+					"type": "string"
+				},
+				"SMSOptIn": {
+					"type": "integer"
+				},
+				"SMSStatus": {
+					"type": "string"
+				},
+				"Email": {
+					"type": "string"
+				},
+				"ReceiptUrl": {
+					"type": "string"
+				},
+				"Total": {
+					"type": "number"
+				},
+				"PaymentTransactionId": {
+					"type": "string"
+				},
+				"HasBeenShipped": {
+					"type": "integer"
+				},
+				"Details": {
+					"type": "array",
+					"items": {
+						"type": "object",
+						"properties": {
+							"Email": {
+								"type": "string"
+							},
+							"ProductId": {
+								"type": "integer"
+							},
+							"Quantity": {
+								"type": "integer"
+							},
+							"UnitPrice": {
+								"type": "number"
+							}
+						}
+					}
+				},
+				"EventProcessedUtcTime": {
+					"type": "string"
+				},
+				"PartitionId": {
+					"type": "integer"
+				},
+				"EventEnqueuedUtcTime": {
+					"type": "string"
+				}
+			}
+		},
+		"typeProperties": {
+			"collectionName": "orderdata"
+		}
+	}
+}
