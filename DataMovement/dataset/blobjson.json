@@ -10,7 +10,10 @@
 		"typeProperties": {
 			"location": {
 				"type": "AzureBlobFSLocation",
-				"fileName": "@concat(pipeline().RunId,’.json’)",
+				"fileName": {
+					"value": "‘@concat(pipeline().RunId,’.json’)",
+					"type": "Expression"
+				},
 				"fileSystem": "incoming"
 			}
 		}
