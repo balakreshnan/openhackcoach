@@ -7,6 +7,10 @@
 			"metadata": "Data Factory name",
 			"defaultValue": "openhackadfbb"
 		},
+		"AzureDataLakeStorage1_accountKey": {
+			"type": "secureString",
+			"metadata": "Secure string for 'accountKey' of 'AzureDataLakeStorage1'"
+		},
 		"AzureSqlDatabase1_connectionString": {
 			"type": "secureString",
 			"metadata": "Secure string for 'connectionString' of 'AzureSqlDatabase1'"
@@ -14,6 +18,10 @@
 		"CosmosDb1_connectionString": {
 			"type": "secureString",
 			"metadata": "Secure string for 'connectionString' of 'CosmosDb1'"
+		},
+		"AzureDataLakeStorage1_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://bbopenhackstore.dfs.core.windows.net"
 		}
 	},
 	"variables": {
@@ -313,6 +321,158 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/ordertest')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "CopySQL",
+						"type": "Copy",
+						"dependsOn": [
+							{
+								"activity": "Cleanup",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "AzureSqlSource",
+								"sqlReaderQuery": "SELECT [value] FROM OPENJSON(\n  (SELECT\n    id = o.OrderID,\n    o.OrderDate,\n    o.FirstName,\n    o.LastName,\n    o.Address,\n    o.City,\n    o.State,\n    o.PostalCode,\n    o.Country,\n    o.Phone,\n    o.Total,\n    (select OrderDetailId, ProductId, UnitPrice, Quantity from OrderDetails od where od.OrderId = o.OrderId for json auto) as OrderDetails\n   FROM Orders o FOR JSON PATH)\n)",
+								"queryTimeout": "02:00:00"
+							},
+							"sink": {
+								"type": "DelimitedTextSink",
+								"storeSettings": {
+									"type": "AzureBlobFSWriteSettings"
+								},
+								"formatSettings": {
+									"type": "DelimitedTextWriteSettings",
+									"quoteAllText": true,
+									"fileExtension": ".txt"
+								}
+							},
+							"enableStaging": false
+						},
+						"inputs": [
+							{
+								"referenceName": "AzureSqlTable1",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "jsonstring",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						]
+					},
+					{
+						"name": "CopytoCosmos",
+						"type": "Copy",
+						"dependsOn": [
+							{
+								"activity": "CopySQL",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "JsonSource",
+								"storeSettings": {
+									"type": "AzureBlobFSReadSettings",
+									"recursive": true,
+									"wildcardFileName": "*.json"
+								}
+							},
+							"sink": {
+								"type": "CosmosDbSqlApiSink",
+								"writeBehavior": "insert"
+							},
+							"enableStaging": false
+						},
+						"inputs": [
+							{
+								"referenceName": "blobjson",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "ordertest",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						]
+					},
+					{
+						"name": "Cleanup",
+						"type": "Delete",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataset": {
+								"referenceName": "cleanuporders",
+								"type": "DatasetReference",
+								"parameters": {}
+							},
+							"logStorageSettings": {
+								"linkedServiceName": {
+									"referenceName": "AzureDataLakeStorage1",
+									"type": "LinkedServiceReference"
+								},
+								"path": "logs"
+							},
+							"enableLogging": true,
+							"storeSettings": {
+								"type": "AzureBlobFSReadSettings",
+								"recursive": true
+							}
+						}
+					}
+				],
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/AzureSqlTable1')]",
+				"[concat(variables('factoryId'), '/datasets/jsonstring')]",
+				"[concat(variables('factoryId'), '/datasets/blobjson')]",
+				"[concat(variables('factoryId'), '/datasets/ordertest')]",
+				"[concat(variables('factoryId'), '/datasets/cleanuporders')]",
+				"[concat(variables('factoryId'), '/linkedServices/AzureDataLakeStorage1')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/AzureSqlTable1')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
@@ -408,6 +568,65 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/Category')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "CosmosDb1",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "CosmosDbSqlApiCollection",
+				"schema": {},
+				"typeProperties": {
+					"collectionName": "Category"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/CosmosDb1')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Categorysql')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureSqlDatabase1",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [
+					{
+						"name": "CategoryId",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "CategoryName",
+						"type": "varchar"
+					},
+					{
+						"name": "Description",
+						"type": "varchar"
+					},
+					{
+						"name": "Products",
+						"type": "varchar"
+					}
+				],
+				"typeProperties": {
+					"schema": "dbo",
+					"table": "Category"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureSqlDatabase1')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/CosmosDbSqlApiCollection1')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
@@ -441,33 +660,7 @@
 			]
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/AzureSqlDatabase1')]",
-			"type": "Microsoft.DataFactory/factories/linkedServices",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"annotations": [],
-				"type": "AzureSqlDatabase",
-				"typeProperties": {
-					"connectionString": "[parameters('AzureSqlDatabase1_connectionString')]"
-				}
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/CosmosDb1')]",
-			"type": "Microsoft.DataFactory/factories/linkedServices",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"annotations": [],
-				"type": "CosmosDb",
-				"typeProperties": {
-					"connectionString": "[parameters('CosmosDb1_connectionString')]"
-				}
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/Orderdetails')]",
+			"name": "[concat(parameters('factoryName'), '/Event')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
 			"properties": {
@@ -479,7 +672,7 @@
 				"type": "CosmosDbSqlApiCollection",
 				"schema": {},
 				"typeProperties": {
-					"collectionName": "OrderDetails"
+					"collectionName": "Event"
 				}
 			},
 			"dependsOn": [
@@ -487,7 +680,7 @@
 			]
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/orderdetailssql')]",
+			"name": "[concat(parameters('factoryName'), '/Eventsql')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
 			"properties": {
@@ -499,39 +692,50 @@
 				"type": "AzureSqlTable",
 				"schema": [
 					{
-						"name": "OrderDetailId",
-						"type": "int",
-						"precision": 10
-					},
-					{
-						"name": "OrderId",
-						"type": "int",
-						"precision": 10
-					},
-					{
-						"name": "Email",
+						"name": "id",
 						"type": "varchar"
 					},
 					{
-						"name": "ProductId",
+						"name": "event",
+						"type": "varchar"
+					},
+					{
+						"name": "userId",
 						"type": "int",
 						"precision": 10
 					},
 					{
-						"name": "Quantity",
+						"name": "itemId",
 						"type": "int",
 						"precision": 10
 					},
 					{
-						"name": "UnitPrice",
-						"type": "decimal",
-						"precision": 18,
-						"scale": 2
+						"name": "orderId",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "contentId",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "sessionId",
+						"type": "varchar"
+					},
+					{
+						"name": "created",
+						"type": "datetime2",
+						"scale": 7
+					},
+					{
+						"name": "region",
+						"type": "varchar"
 					}
 				],
 				"typeProperties": {
 					"schema": "dbo",
-					"table": "OrderDetails"
+					"table": "Event"
 				}
 			},
 			"dependsOn": [
@@ -539,51 +743,7 @@
 			]
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/Usersql')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"linkedServiceName": {
-					"referenceName": "AzureSqlDatabase1",
-					"type": "LinkedServiceReference"
-				},
-				"annotations": [],
-				"type": "AzureSqlTable",
-				"schema": [
-					{
-						"name": "UserId",
-						"type": "int",
-						"precision": 10
-					},
-					{
-						"name": "Name",
-						"type": "varchar"
-					},
-					{
-						"name": "Email",
-						"type": "varchar"
-					},
-					{
-						"name": "CategoryId",
-						"type": "int",
-						"precision": 10
-					},
-					{
-						"name": "Personality",
-						"type": "varchar"
-					}
-				],
-				"typeProperties": {
-					"schema": "dbo",
-					"table": "User"
-				}
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/AzureSqlDatabase1')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/User')]",
+			"name": "[concat(parameters('factoryName'), '/Item')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
 			"properties": {
@@ -595,11 +755,82 @@
 				"type": "CosmosDbSqlApiCollection",
 				"schema": {},
 				"typeProperties": {
-					"collectionName": "User"
+					"collectionName": "Item"
 				}
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/linkedServices/CosmosDb1')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ItemAggregate')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "CosmosDb1",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "CosmosDbSqlApiCollection",
+				"schema": {},
+				"typeProperties": {
+					"collectionName": "ItemAggregate"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/CosmosDb1')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ItemAggregatesql')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureSqlDatabase1",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [
+					{
+						"name": "id",
+						"type": "varchar"
+					},
+					{
+						"name": "ItemId",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "BuyCount",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "ViewDetailsCount",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "AddToCartCount",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "VoteCount",
+						"type": "int",
+						"precision": 10
+					}
+				],
+				"typeProperties": {
+					"schema": "dbo",
+					"table": "ItemAggregate"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureSqlDatabase1')]"
 			]
 		},
 		{
@@ -691,7 +922,7 @@
 			]
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/Item')]",
+			"name": "[concat(parameters('factoryName'), '/Orderdetails')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
 			"properties": {
@@ -703,7 +934,7 @@
 				"type": "CosmosDbSqlApiCollection",
 				"schema": {},
 				"typeProperties": {
-					"collectionName": "Item"
+					"collectionName": "OrderDetails"
 				}
 			},
 			"dependsOn": [
@@ -711,58 +942,7 @@
 			]
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/ItemAggregatesql')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"linkedServiceName": {
-					"referenceName": "AzureSqlDatabase1",
-					"type": "LinkedServiceReference"
-				},
-				"annotations": [],
-				"type": "AzureSqlTable",
-				"schema": [
-					{
-						"name": "id",
-						"type": "varchar"
-					},
-					{
-						"name": "ItemId",
-						"type": "int",
-						"precision": 10
-					},
-					{
-						"name": "BuyCount",
-						"type": "int",
-						"precision": 10
-					},
-					{
-						"name": "ViewDetailsCount",
-						"type": "int",
-						"precision": 10
-					},
-					{
-						"name": "AddToCartCount",
-						"type": "int",
-						"precision": 10
-					},
-					{
-						"name": "VoteCount",
-						"type": "int",
-						"precision": 10
-					}
-				],
-				"typeProperties": {
-					"schema": "dbo",
-					"table": "ItemAggregate"
-				}
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/AzureSqlDatabase1')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/ItemAggregate')]",
+			"name": "[concat(parameters('factoryName'), '/User')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
 			"properties": {
@@ -774,7 +954,7 @@
 				"type": "CosmosDbSqlApiCollection",
 				"schema": {},
 				"typeProperties": {
-					"collectionName": "ItemAggregate"
+					"collectionName": "User"
 				}
 			},
 			"dependsOn": [
@@ -782,7 +962,7 @@
 			]
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/Eventsql')]",
+			"name": "[concat(parameters('factoryName'), '/Usersql')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
 			"properties": {
@@ -794,109 +974,31 @@
 				"type": "AzureSqlTable",
 				"schema": [
 					{
-						"name": "id",
-						"type": "varchar"
-					},
-					{
-						"name": "event",
-						"type": "varchar"
-					},
-					{
-						"name": "userId",
+						"name": "UserId",
 						"type": "int",
 						"precision": 10
 					},
 					{
-						"name": "itemId",
-						"type": "int",
-						"precision": 10
-					},
-					{
-						"name": "orderId",
-						"type": "int",
-						"precision": 10
-					},
-					{
-						"name": "contentId",
-						"type": "int",
-						"precision": 10
-					},
-					{
-						"name": "sessionId",
+						"name": "Name",
 						"type": "varchar"
 					},
 					{
-						"name": "created",
-						"type": "datetime2",
-						"scale": 7
-					},
-					{
-						"name": "region",
+						"name": "Email",
 						"type": "varchar"
-					}
-				],
-				"typeProperties": {
-					"schema": "dbo",
-					"table": "Event"
-				}
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/AzureSqlDatabase1')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/Event')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"linkedServiceName": {
-					"referenceName": "CosmosDb1",
-					"type": "LinkedServiceReference"
-				},
-				"annotations": [],
-				"type": "CosmosDbSqlApiCollection",
-				"schema": {},
-				"typeProperties": {
-					"collectionName": "Event"
-				}
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/CosmosDb1')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/Categorysql')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"linkedServiceName": {
-					"referenceName": "AzureSqlDatabase1",
-					"type": "LinkedServiceReference"
-				},
-				"annotations": [],
-				"type": "AzureSqlTable",
-				"schema": [
+					},
 					{
 						"name": "CategoryId",
 						"type": "int",
 						"precision": 10
 					},
 					{
-						"name": "CategoryName",
-						"type": "varchar"
-					},
-					{
-						"name": "Description",
-						"type": "varchar"
-					},
-					{
-						"name": "Products",
+						"name": "Personality",
 						"type": "varchar"
 					}
 				],
 				"typeProperties": {
 					"schema": "dbo",
-					"table": "Category"
+					"table": "User"
 				}
 			},
 			"dependsOn": [
@@ -904,7 +1006,138 @@
 			]
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/Category')]",
+			"name": "[concat(parameters('factoryName'), '/blobjson')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureDataLakeStorage1",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "Json",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": {
+							"value": "‘@concat(pipeline().RunId,’.json’)",
+							"type": "Expression"
+						},
+						"fileSystem": "incoming"
+					}
+				},
+				"schema": {}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureDataLakeStorage1')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/cleanuporders')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureDataLakeStorage1",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "Binary",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileSystem": "incoming"
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureDataLakeStorage1')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/jsonstring')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureDataLakeStorage1",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": {
+							"value": "‘@concat(pipeline().RunId,’.json’)",
+							"type": "Expression"
+						},
+						"fileSystem": "incoming"
+					},
+					"columnDelimiter": "\t",
+					"escapeChar": "\\",
+					"quoteChar": ""
+				},
+				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureDataLakeStorage1')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/orderdetailssql')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureSqlDatabase1",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [
+					{
+						"name": "OrderDetailId",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "OrderId",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "Email",
+						"type": "varchar"
+					},
+					{
+						"name": "ProductId",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "Quantity",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "UnitPrice",
+						"type": "decimal",
+						"precision": 18,
+						"scale": 2
+					}
+				],
+				"typeProperties": {
+					"schema": "dbo",
+					"table": "OrderDetails"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureSqlDatabase1')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ordertest')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
 			"properties": {
@@ -916,12 +1149,55 @@
 				"type": "CosmosDbSqlApiCollection",
 				"schema": {},
 				"typeProperties": {
-					"collectionName": "Category"
+					"collectionName": "ordertest"
 				}
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/linkedServices/CosmosDb1')]"
 			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/AzureDataLakeStorage1')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureBlobFS",
+				"typeProperties": {
+					"url": "[parameters('AzureDataLakeStorage1_properties_typeProperties_url')]",
+					"accountKey": {
+						"type": "SecureString",
+						"value": "[parameters('AzureDataLakeStorage1_accountKey')]"
+					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/AzureSqlDatabase1')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureSqlDatabase",
+				"typeProperties": {
+					"connectionString": "[parameters('AzureSqlDatabase1_connectionString')]"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/CosmosDb1')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "CosmosDb",
+				"typeProperties": {
+					"connectionString": "[parameters('CosmosDb1_connectionString')]"
+				}
+			},
+			"dependsOn": []
 		}
 	]
 }

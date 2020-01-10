@@ -5,11 +5,17 @@
 		"factoryName": {
 			"value": "openhackadfbb"
 		},
+		"AzureDataLakeStorage1_accountKey": {
+			"value": ""
+		},
 		"AzureSqlDatabase1_connectionString": {
 			"value": ""
 		},
 		"CosmosDb1_connectionString": {
 			"value": ""
+		},
+		"AzureDataLakeStorage1_properties_typeProperties_url": {
+			"value": "https://bbopenhackstore.dfs.core.windows.net"
 		}
 	}
 }
