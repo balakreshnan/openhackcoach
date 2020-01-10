@@ -329,14 +329,7 @@
 					{
 						"name": "CopySQL",
 						"type": "Copy",
-						"dependsOn": [
-							{
-								"activity": "Cleanup",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
+						"dependsOn": [],
 						"policy": {
 							"timeout": "7.00:00:00",
 							"retry": 0,
@@ -427,31 +420,6 @@
 								"parameters": {}
 							}
 						]
-					},
-					{
-						"name": "Cleanup",
-						"type": "Delete",
-						"dependsOn": [],
-						"policy": {
-							"timeout": "7.00:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"dataset": {
-								"referenceName": "cleanuporders",
-								"type": "DatasetReference",
-								"parameters": {}
-							},
-							"enableLogging": false,
-							"storeSettings": {
-								"type": "AzureBlobFSReadSettings",
-								"recursive": true
-							}
-						}
 					}
 				],
 				"annotations": []
@@ -460,9 +428,7 @@
 				"[concat(variables('factoryId'), '/datasets/AzureSqlTable1')]",
 				"[concat(variables('factoryId'), '/datasets/jsonstring')]",
 				"[concat(variables('factoryId'), '/datasets/blobjson')]",
-				"[concat(variables('factoryId'), '/datasets/ordertest')]",
-				"[concat(variables('factoryId'), '/datasets/cleanuporders')]",
-				"[concat(variables('factoryId'), '/linkedServices/AzureDataLakeStorage1')]"
+				"[concat(variables('factoryId'), '/datasets/ordertest')]"
 			]
 		},
 		{
