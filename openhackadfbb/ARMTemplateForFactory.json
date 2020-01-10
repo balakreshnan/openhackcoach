@@ -29,6 +29,50 @@
 	},
 	"resources": [
 		{
+			"name": "[concat(parameters('factoryName'), '/OrderComplete')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "OrderComplete",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "OrderComplete",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"orderdata": {},
+									"Item": {},
+									"Category": {},
+									"ordercomplete": {}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							}
+						}
+					}
+				],
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/dataflows/OrderComplete')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/cpsqltocosmos')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
@@ -1101,6 +1145,130 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/ordercomplete')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "CosmosDb1",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "CosmosDbSqlApiCollection",
+				"schema": {},
+				"typeProperties": {
+					"collectionName": "ordercomplete"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/CosmosDb1')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/orderdata')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "CosmosDb1",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "CosmosDbSqlApiCollection",
+				"schema": {
+					"type": "object",
+					"properties": {
+						"Region": {
+							"type": "string"
+						},
+						"OrderDate": {
+							"type": "string"
+						},
+						"FirstName": {
+							"type": "string"
+						},
+						"LastName": {
+							"type": "string"
+						},
+						"Address": {
+							"type": "string"
+						},
+						"City": {
+							"type": "string"
+						},
+						"State": {
+							"type": "string"
+						},
+						"PostalCode": {
+							"type": "string"
+						},
+						"Country": {
+							"type": "string"
+						},
+						"Phone": {
+							"type": "string"
+						},
+						"SMSOptIn": {
+							"type": "integer"
+						},
+						"SMSStatus": {
+							"type": "string"
+						},
+						"Email": {
+							"type": "string"
+						},
+						"ReceiptUrl": {
+							"type": "string"
+						},
+						"Total": {
+							"type": "number"
+						},
+						"PaymentTransactionId": {
+							"type": "string"
+						},
+						"HasBeenShipped": {
+							"type": "integer"
+						},
+						"Details": {
+							"type": "array",
+							"items": {
+								"type": "object",
+								"properties": {
+									"Email": {
+										"type": "string"
+									},
+									"ProductId": {
+										"type": "integer"
+									},
+									"Quantity": {
+										"type": "integer"
+									},
+									"UnitPrice": {
+										"type": "number"
+									}
+								}
+							}
+						},
+						"EventProcessedUtcTime": {
+							"type": "string"
+						},
+						"PartitionId": {
+							"type": "integer"
+						},
+						"EventEnqueuedUtcTime": {
+							"type": "string"
+						}
+					}
+				},
+				"typeProperties": {
+					"collectionName": "orderdata"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/CosmosDb1')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/orderdetailssql')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
@@ -1214,6 +1382,69 @@
 				}
 			},
 			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/OrderComplete')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "orderdata",
+								"type": "DatasetReference"
+							},
+							"name": "orderdata",
+							"typeProperties": {}
+						},
+						{
+							"dataset": {
+								"referenceName": "Item",
+								"type": "DatasetReference"
+							},
+							"name": "Item",
+							"typeProperties": {}
+						},
+						{
+							"dataset": {
+								"referenceName": "Category",
+								"type": "DatasetReference"
+							},
+							"name": "Category",
+							"typeProperties": {}
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "ordercomplete",
+								"type": "DatasetReference"
+							},
+							"name": "ordercomplete"
+						}
+					],
+					"transformations": [
+						{
+							"name": "Join1"
+						},
+						{
+							"name": "Join2"
+						},
+						{
+							"name": "Select1"
+						}
+					],
+					"script": "\n\nsource(output(\n\t\tOrderDate as string,\n\t\tProductId as integer,\n\t\tQuantity as integer,\n\t\tTotal as double,\n\t\tUnitPrice as double\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tquery: 'SELECT a.OrderDate, c.ProductId, c.Quantity, c.UnitPrice, a.Total FROM orderdata a JOIN c IN a.Details',\n\tformat: 'documentQuery',\n\tsystemColumns: false) ~> orderdata\nsource(output(\n\t\tCategory as string,\n\t\tCategoryId as integer,\n\t\tDescription as string,\n\t\tImagePath as string,\n\t\tImdbId as integer,\n\t\tItemId as integer,\n\t\tOriginalLanguage as string,\n\t\tPopularity as double,\n\t\tProductName as string,\n\t\tReleaseDate as string,\n\t\tThumbnailPath as string,\n\t\tUnitPrice as double,\n\t\tVoteAverage as double,\n\t\tVoteCount as integer\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tformat: 'document') ~> Item\nsource(output(\n\t\tCategoryId as integer,\n\t\tCategoryName as string,\n\t\tDescription as string,\n\t\tProducts as string\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tformat: 'document') ~> Category\norderdata, Item join(ProductId == ItemId,\n\tjoinType:'inner',\n\tbroadcast: 'none')~> Join1\nItem, Category join(Item@CategoryId == Item@CategoryId,\n\tjoinType:'inner',\n\tbroadcast: 'none')~> Join2\nJoin1 select(mapColumn(\n\t\tOrderDate,\n\t\tProductId,\n\t\tQuantity,\n\t\tTotal,\n\t\tUnitPrice = orderdata@UnitPrice,\n\t\tCategory,\n\t\tCategoryId,\n\t\tDescription,\n\t\tImagePath,\n\t\tImdbId,\n\t\tItemId,\n\t\tOriginalLanguage,\n\t\tPopularity,\n\t\tProductName,\n\t\tReleaseDate,\n\t\tThumbnailPath,\n\t\tItemUnitPrice = Item@UnitPrice,\n\t\tVoteAverage,\n\t\tVoteCount\n\t),\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> Select1\nSelect1 sink(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tdeletable:false,\n\tinsertable:true,\n\tupdateable:false,\n\tupsertable:false,\n\tformat: 'document') ~> ordercomplete"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/orderdata')]",
+				"[concat(variables('factoryId'), '/datasets/Item')]",
+				"[concat(variables('factoryId'), '/datasets/Category')]",
+				"[concat(variables('factoryId'), '/datasets/ordercomplete')]"
+			]
 		}
 	]
 }
