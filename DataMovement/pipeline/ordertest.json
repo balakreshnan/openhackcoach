@@ -45,6 +45,43 @@
 						"type": "DatasetReference"
 					}
 				]
+			},
+			{
+				"name": "CopytoCosmos",
+				"type": "Copy",
+				"dependsOn": [
+					{
+						"activity": "CopySQL",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "JsonSource",
+						"storeSettings": {
+							"type": "AzureBlobFSReadSettings",
+							"recursive": true,
+							"wildcardFileName": "*.json"
+						}
+					},
+					"enableStaging": false
+				},
+				"inputs": [
+					{
+						"referenceName": "blobjson",
+						"type": "DatasetReference"
+					}
+				]
 			}
 		],
 		"annotations": []
