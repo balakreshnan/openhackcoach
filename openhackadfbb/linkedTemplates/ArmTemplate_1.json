@@ -366,7 +366,7 @@
 							{
 								"activity": "CopySQL",
 								"dependencyConditions": [
-									"Succeeded"
+									"Completed"
 								]
 							}
 						],
