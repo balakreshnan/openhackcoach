@@ -114,7 +114,7 @@
 				"userProperties": [],
 				"typeProperties": {
 					"dataset": {
-						"referenceName": "jsonstring",
+						"referenceName": "cleanuporders",
 						"type": "DatasetReference"
 					},
 					"enableLogging": true,
