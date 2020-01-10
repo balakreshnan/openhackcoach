@@ -1,0 +1,98 @@
+{
+	"$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"type": "string",
+			"metadata": "Data Factory name",
+			"defaultValue": "openhackadfbb"
+		}
+	},
+	"variables": {
+		"factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
+	},
+	"resources": [
+		{
+			"name": "[concat(parameters('factoryName'), '/blobjson')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureDataLakeStorage1",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "Json",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": {
+							"value": "‘@concat(pipeline().RunId,’.json’)",
+							"type": "Expression"
+						},
+						"fileSystem": "incoming"
+					}
+				},
+				"schema": {
+					"type": "object",
+					"properties": {
+						"id": {
+							"type": "integer"
+						},
+						"OrderDate": {
+							"type": "string"
+						},
+						"FirstName": {
+							"type": "string"
+						},
+						"LastName": {
+							"type": "string"
+						},
+						"Address": {
+							"type": "string"
+						},
+						"City": {
+							"type": "string"
+						},
+						"State": {
+							"type": "string"
+						},
+						"PostalCode": {
+							"type": "string"
+						},
+						"Country": {
+							"type": "string"
+						},
+						"Phone": {
+							"type": "string"
+						},
+						"Total": {
+							"type": "number"
+						},
+						"OrderDetails": {
+							"type": "array",
+							"items": {
+								"type": "object",
+								"properties": {
+									"OrderDetailId": {
+										"type": "integer"
+									},
+									"ProductId": {
+										"type": "integer"
+									},
+									"UnitPrice": {
+										"type": "number"
+									},
+									"Quantity": {
+										"type": "integer"
+									}
+								}
+							}
+						}
+					}
+				}
+			},
+			"dependsOn": []
+		}
+	]
+}
