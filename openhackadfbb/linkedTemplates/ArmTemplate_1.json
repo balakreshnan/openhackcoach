@@ -433,14 +433,7 @@
 								"type": "DatasetReference",
 								"parameters": {}
 							},
-							"logStorageSettings": {
-								"linkedServiceName": {
-									"referenceName": "AzureDataLakeStorage1",
-									"type": "LinkedServiceReference"
-								},
-								"path": "logs"
-							},
-							"enableLogging": true,
+							"enableLogging": false,
 							"storeSettings": {
 								"type": "AzureBlobFSReadSettings",
 								"recursive": true
