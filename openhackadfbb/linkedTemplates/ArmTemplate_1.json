@@ -13,6 +13,52 @@
 	},
 	"resources": [
 		{
+			"name": "[concat(parameters('factoryName'), '/jsonstring')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureDataLakeStorage1",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": {
+							"value": "‘@concat(pipeline().RunId,’.json’)",
+							"type": "Expression"
+						},
+						"fileSystem": "incoming"
+					},
+					"columnDelimiter": "\t",
+					"escapeChar": "\\",
+					"quoteChar": ""
+				},
+				"schema": []
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ordercomplete')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "CosmosDb1",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "CosmosDbSqlApiCollection",
+				"schema": {},
+				"typeProperties": {
+					"collectionName": "ordercomplete"
+				}
+			},
+			"dependsOn": []
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/orderdata')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
@@ -566,6 +612,7 @@
 				"annotations": []
 			},
 			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/jsonstring')]",
 				"[concat(variables('factoryId'), '/datasets/ordertest')]"
 			]
 		},
@@ -626,7 +673,86 @@
 				}
 			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/datasets/orderdata')]"
+				"[concat(variables('factoryId'), '/datasets/orderdata')]",
+				"[concat(variables('factoryId'), '/datasets/ordercomplete')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Orderstats')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "Orders",
+								"type": "DatasetReference"
+							},
+							"name": "orders",
+							"typeProperties": {}
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "hourly",
+								"type": "DatasetReference"
+							},
+							"name": "sink1"
+						}
+					],
+					"transformations": [
+						{
+							"name": "GroupBY"
+						}
+					],
+					"script": "\n\nsource(output(\n\t\tOrderId as string,\n\t\tOrderDate as string,\n\t\tFirstName as string,\n\t\tLastName as string,\n\t\tAddress as string,\n\t\tCity as string,\n\t\tState as string,\n\t\tPostalCode as string,\n\t\tCountry as string,\n\t\tPhone as string,\n\t\tSMSOptIn as boolean,\n\t\tSMSStatus as string,\n\t\tEmail as string,\n\t\tReceiptUrl as string,\n\t\tTotal as double,\n\t\tPaymentTransactionId as string,\n\t\tHasBeenShipped as boolean\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tformat: 'document') ~> orders\norders aggregate(groupBy(year = year(toDate(OrderDate)),\n\t\tmonth = month(toDate(OrderDate)),\n\t\tday = dayOfYear(toDate(OrderDate)),\n\t\thour = hour(toTimestamp(OrderDate,\"HH:mm:ss\"))),\n\tordercount = count(OrderId),\n\t\ttotalrevenue = sum(Total)) ~> GroupBY\nGroupBY sink(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tdeletable:false,\n\tinsertable:true,\n\tupdateable:false,\n\tupsertable:false,\n\tformat: 'document') ~> sink1"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/HourlyAggr')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Orderstats",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "Orderstats",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"orders": {},
+									"sink1": {}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							}
+						}
+					}
+				],
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/dataflows/Orderstats')]"
 			]
 		},
 		{

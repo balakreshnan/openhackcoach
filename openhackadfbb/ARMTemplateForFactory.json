@@ -29,6 +29,48 @@
 	},
 	"resources": [
 		{
+			"name": "[concat(parameters('factoryName'), '/HourlyAggr')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Orderstats",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "Orderstats",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"orders": {},
+									"sink1": {}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							}
+						}
+					}
+				],
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/dataflows/Orderstats')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/OrderComplete')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
@@ -945,6 +987,81 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/Orders')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "CosmosDb1",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "CosmosDbSqlApiCollection",
+				"schema": {
+					"type": "object",
+					"properties": {
+						"OrderId": {
+							"type": "integer"
+						},
+						"OrderDate": {
+							"type": "string"
+						},
+						"FirstName": {
+							"type": "string"
+						},
+						"LastName": {
+							"type": "string"
+						},
+						"Address": {
+							"type": "string"
+						},
+						"City": {
+							"type": "string"
+						},
+						"State": {
+							"type": "string"
+						},
+						"PostalCode": {
+							"type": "string"
+						},
+						"Country": {
+							"type": "string"
+						},
+						"Phone": {
+							"type": "string"
+						},
+						"SMSOptIn": {
+							"type": "boolean"
+						},
+						"SMSStatus": {
+							"type": "null"
+						},
+						"Email": {
+							"type": "string"
+						},
+						"ReceiptUrl": {
+							"type": "null"
+						},
+						"Total": {
+							"type": "number"
+						},
+						"PaymentTransactionId": {
+							"type": "string"
+						},
+						"HasBeenShipped": {
+							"type": "boolean"
+						}
+					}
+				},
+				"typeProperties": {
+					"collectionName": "Orders"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/CosmosDb1')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/User')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
@@ -1112,6 +1229,26 @@
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/linkedServices/AzureDataLakeStorage1')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/hourly')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "CosmosDb1",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "CosmosDbSqlApiCollection",
+				"schema": {},
+				"typeProperties": {
+					"collectionName": "hourlydata"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/CosmosDb1')]"
 			]
 		},
 		{
@@ -1444,6 +1581,45 @@
 				"[concat(variables('factoryId'), '/datasets/Item')]",
 				"[concat(variables('factoryId'), '/datasets/Category')]",
 				"[concat(variables('factoryId'), '/datasets/ordercomplete')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Orderstats')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "Orders",
+								"type": "DatasetReference"
+							},
+							"name": "orders",
+							"typeProperties": {}
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "hourly",
+								"type": "DatasetReference"
+							},
+							"name": "sink1"
+						}
+					],
+					"transformations": [
+						{
+							"name": "GroupBY"
+						}
+					],
+					"script": "\n\nsource(output(\n\t\tOrderId as string,\n\t\tOrderDate as string,\n\t\tFirstName as string,\n\t\tLastName as string,\n\t\tAddress as string,\n\t\tCity as string,\n\t\tState as string,\n\t\tPostalCode as string,\n\t\tCountry as string,\n\t\tPhone as string,\n\t\tSMSOptIn as boolean,\n\t\tSMSStatus as string,\n\t\tEmail as string,\n\t\tReceiptUrl as string,\n\t\tTotal as double,\n\t\tPaymentTransactionId as string,\n\t\tHasBeenShipped as boolean\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tformat: 'document') ~> orders\norders aggregate(groupBy(year = year(toDate(OrderDate)),\n\t\tmonth = month(toDate(OrderDate)),\n\t\tday = dayOfYear(toDate(OrderDate)),\n\t\thour = hour(toTimestamp(OrderDate,\"HH:mm:ss\"))),\n\tordercount = count(OrderId),\n\t\ttotalrevenue = sum(Total)) ~> GroupBY\nGroupBY sink(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tdeletable:false,\n\tinsertable:true,\n\tupdateable:false,\n\tupsertable:false,\n\tformat: 'document') ~> sink1"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/Orders')]",
+				"[concat(variables('factoryId'), '/datasets/hourly')]"
 			]
 		}
 	]

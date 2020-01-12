@@ -541,6 +541,81 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/Orders')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "CosmosDb1",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "CosmosDbSqlApiCollection",
+				"schema": {
+					"type": "object",
+					"properties": {
+						"OrderId": {
+							"type": "integer"
+						},
+						"OrderDate": {
+							"type": "string"
+						},
+						"FirstName": {
+							"type": "string"
+						},
+						"LastName": {
+							"type": "string"
+						},
+						"Address": {
+							"type": "string"
+						},
+						"City": {
+							"type": "string"
+						},
+						"State": {
+							"type": "string"
+						},
+						"PostalCode": {
+							"type": "string"
+						},
+						"Country": {
+							"type": "string"
+						},
+						"Phone": {
+							"type": "string"
+						},
+						"SMSOptIn": {
+							"type": "boolean"
+						},
+						"SMSStatus": {
+							"type": "null"
+						},
+						"Email": {
+							"type": "string"
+						},
+						"ReceiptUrl": {
+							"type": "null"
+						},
+						"Total": {
+							"type": "number"
+						},
+						"PaymentTransactionId": {
+							"type": "string"
+						},
+						"HasBeenShipped": {
+							"type": "boolean"
+						}
+					}
+				},
+				"typeProperties": {
+					"collectionName": "Orders"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/CosmosDb1')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/User')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
@@ -711,37 +786,7 @@
 			]
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/jsonstring')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"linkedServiceName": {
-					"referenceName": "AzureDataLakeStorage1",
-					"type": "LinkedServiceReference"
-				},
-				"annotations": [],
-				"type": "DelimitedText",
-				"typeProperties": {
-					"location": {
-						"type": "AzureBlobFSLocation",
-						"fileName": {
-							"value": "‘@concat(pipeline().RunId,’.json’)",
-							"type": "Expression"
-						},
-						"fileSystem": "incoming"
-					},
-					"columnDelimiter": "\t",
-					"escapeChar": "\\",
-					"quoteChar": ""
-				},
-				"schema": []
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/AzureDataLakeStorage1')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/ordercomplete')]",
+			"name": "[concat(parameters('factoryName'), '/hourly')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
 			"properties": {
@@ -753,7 +798,7 @@
 				"type": "CosmosDbSqlApiCollection",
 				"schema": {},
 				"typeProperties": {
-					"collectionName": "ordercomplete"
+					"collectionName": "hourlydata"
 				}
 			},
 			"dependsOn": [
