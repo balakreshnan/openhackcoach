@@ -1,0 +1,32 @@
+{
+	"name": "Orderstats",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "Orders",
+						"type": "DatasetReference"
+					},
+					"name": "orders"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "hourly",
+						"type": "DatasetReference"
+					},
+					"name": "sink1"
+				}
+			],
+			"transformations": [
+				{
+					"name": "GroupBY"
+				}
+			],
+			"script": "\n\nsource(output(\n\t\tOrderId as string,\n\t\tOrderDate as string,\n\t\tFirstName as string,\n\t\tLastName as string,\n\t\tAddress as string,\n\t\tCity as string,\n\t\tState as string,\n\t\tPostalCode as string,\n\t\tCountry as string,\n\t\tPhone as string,\n\t\tSMSOptIn as boolean,\n\t\tSMSStatus as string,\n\t\tEmail as string,\n\t\tReceiptUrl as string,\n\t\tTotal as double,\n\t\tPaymentTransactionId as string,\n\t\tHasBeenShipped as boolean\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tformat: 'document') ~> orders\norders aggregate(groupBy(year = year(OrderDate),\n\t\tMonth = month(OrderDate),\n\t\tday = dayOfYear(OrderDate),\n\t\thour = hour(toTimestamp(OrderDate,\"HH:mm:ss\"))),\n\tordercount = count(OrderId),\n\t\ttotalrevenue = sum(Total)) ~> GroupBY\nGroupBY sink(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tdeletable:false,\n\tinsertable:true,\n\tupdateable:false,\n\tupsertable:false,\n\tformat: 'document') ~> sink1"
+		}
+	}
+}
